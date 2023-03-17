@@ -8,9 +8,12 @@
 import Foundation
 import Security
 
+/*
+
 public enum RSAKeySize: Int {
-   case key1024 = 1024
-   case key2048 = 2048
+    case key1024 = 1024
+    case key2048 = 2048
+    case key4096 = 4096
 }
 
 enum RSAError: Error {
@@ -20,6 +23,8 @@ enum RSAError: Error {
    case creatingReferenceKey(_ error: Unmanaged<CFError>?)
    case invalidReferenceKey
 }
+
+
 
 public extension String {
    
@@ -138,3 +143,5 @@ private extension SecKey {
        return result
    }
 }
+
+*/
