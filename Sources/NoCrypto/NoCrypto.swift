@@ -17,8 +17,8 @@ public enum AESError: Error {
 
 public extension String {
     
-    static func generateEncryptionKey(length: Int = kCCKeySizeAES256) throws -> String {
-        return try AES.generateEncryptionKey().aesKeyString
+    static func aesGenerateEncryptionKey(length: Int = kCCKeySizeAES256) throws -> String {
+        return try AES.aesGenerateEncryptionKey().aesKeyString
     }
     
     func aesEncrypt(data: Data) throws -> Data {
@@ -67,7 +67,7 @@ private extension Data {
 
 public class AES {
     
-    public static func generateEncryptionKey(length: Int = kCCKeySizeAES256) throws -> Data {
+    public static func aesGenerateEncryptionKey(length: Int = kCCKeySizeAES256) throws -> Data {
         var keyData = Data(count: length)
         let result = keyData.withUnsafeMutableBytes {
             SecRandomCopyBytes(kSecRandomDefault, length, $0.baseAddress!)
