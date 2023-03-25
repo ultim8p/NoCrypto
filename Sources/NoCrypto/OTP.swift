@@ -34,7 +34,7 @@ public extension String {
         let characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
         var randomString = ""
         for _ in 0..<length {
-            let rand = Int(arc4random_uniform(UInt32(characters.count)))
+            let rand = Int(UInt32.random(in: 0..<UInt32(characters.count)))
             let nextCharIndex = characters.index(characters.startIndex, offsetBy: rand)
             let nextChar = characters[nextCharIndex]
             randomString.append(nextChar)
