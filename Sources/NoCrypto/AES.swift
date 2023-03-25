@@ -5,12 +5,15 @@
 //  Created by Guerson Perez on 3/17/23.
 //
 
-import CryptoKit
 import Foundation
+import Crypto
 
 public enum AESError: Error {
+    
     case keyGenerationError
+    
     case encryptionError
+    
     case decryptionError
 }
 
