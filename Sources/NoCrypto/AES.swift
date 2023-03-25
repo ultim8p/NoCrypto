@@ -5,8 +5,8 @@
 //  Created by Guerson Perez on 3/17/23.
 //
 
+import CryptoKit
 import Foundation
-import CommonCrypto
 
 public enum AESError: Error {
     case keyGenerationError
@@ -14,21 +14,20 @@ public enum AESError: Error {
     case decryptionError
 }
 
-
 public extension String {
     
-    static func aesGenerateEncryptionKey(length: Int = kCCKeySizeAES256) throws -> String {
-        return try AES.aesGenerateEncryptionKey().aesKeyString
+    static func aesGenerateEncryptionKey() throws -> String {
+        return try AESCrypt.aesGenerateEncryptionKey().aesKeyString
     }
     
     func aesEncrypt(data: Data) throws -> Data {
         let key = try aesKeyData
-        return try AES.encrypt(data: data, key: key)
+        return try AESCrypt.encrypt(data: data, key: key)
     }
     
     func aesDecrypt(data: Data) throws -> Data {
         let key = try aesKeyData
-        return try AES.decrypt(data: data, key: key)
+        return try AESCrypt.decrypt(data: data, key: key)
     }
     
     func aesEncrypt(object: Encodable, using encoder: JSONEncoder? = nil) throws -> Data {
@@ -65,54 +64,33 @@ private extension Data {
     }
 }
 
-public class AES {
+public class AESCrypt {
     
-    public static func aesGenerateEncryptionKey(length: Int = kCCKeySizeAES256) throws -> Data {
-        var keyData = Data(count: length)
-        let result = keyData.withUnsafeMutableBytes {
-            SecRandomCopyBytes(kSecRandomDefault, length, $0.baseAddress!)
-        }
-        
-        if result == errSecSuccess {
-            return keyData
-        } else {
-            throw AESError.keyGenerationError
+    public static func aesGenerateEncryptionKey() throws -> Data {
+        let keyData = SymmetricKey(size: .bits256)
+        return keyData.withUnsafeBytes {
+            Data(Array($0.bindMemory(to: UInt8.self)))
         }
     }
 
     public static func encrypt(data: Data, key: Data) throws -> Data {
-        try crypt(data: data, key: key, operation: CCOperation(kCCEncrypt))
+        try crypt(data: data, key: key, encrypt: true)
     }
 
     public static func decrypt(data: Data, key: Data) throws -> Data {
-        try crypt(data: data, key: key, operation: CCOperation(kCCDecrypt))
+        try crypt(data: data, key: key, encrypt: false)
     }
 
-    private static func crypt(data: Data, key: Data, operation: CCOperation) throws -> Data {
-        let cryptLength = size_t(data.count + kCCBlockSizeAES128)
-        var cryptData = Data(count: cryptLength)
-        
-        var numBytesEncrypted: size_t = 0
-        let options = CCOptions(kCCOptionPKCS7Padding)
-        
-        let cryptStatus = cryptData.withUnsafeMutableBytes { cryptBytes in
-            data.withUnsafeBytes { dataBytes in
-                key.withUnsafeBytes { keyBytes in
-                    CCCrypt(operation, CCAlgorithm(kCCAlgorithmAES), options,
-                            keyBytes.baseAddress, key.count,
-                            nil,
-                            dataBytes.baseAddress, data.count,
-                            cryptBytes.baseAddress, cryptLength,
-                            &numBytesEncrypted)
-                }
-            }
-        }
-        
-        if cryptStatus == CCCryptorStatus(kCCSuccess) {
-            cryptData.removeSubrange(numBytesEncrypted..<cryptData.count)
-            return cryptData
+    private static func crypt(data: Data, key: Data, encrypt: Bool) throws -> Data {
+        let symmetricKey = SymmetricKey(data: key)
+        if encrypt {
+            let sealedBox = try AES.GCM.seal(data, using: symmetricKey)
+            return sealedBox.combined!
         } else {
-            throw operation == CCOperation(kCCEncrypt) ? AESError.encryptionError : AESError.decryptionError
+            guard let sealedBox = try? AES.GCM.SealedBox(combined: data) else {
+                throw AESError.decryptionError
+            }
+            return try AES.GCM.open(sealedBox, using: symmetricKey)
         }
     }
 }
