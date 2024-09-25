@@ -46,7 +46,9 @@ public extension String {
 public extension String {
     
     func validateOTP(token: String, interval: Int, range: Int) throws {
+        print("OTP: Validating OTP: \(token) with interval: \(interval) and range: \(range)")
         let tokens = try getOTPTokens(interval: interval, range: range)
+        print("OTP: Tokens: \(tokens)")
         guard tokens.contains(token) else {
             throw OTPError.invalidToken
         }
